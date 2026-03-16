@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Homework Helper</title>
+    <link rel="icon" type="image/svg+xml" href="./ai-homework-helper-icon.svg" />
+
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: linear-gradient(180deg, #020617, #0f172a);
+        color: white;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+      }
+
+      header {
+        text-align: center;
+        padding: 15px;
+        font-size: 22px;
+        font-weight: bold;
+        color: #38bdf8;
+        text-shadow: 0 0 10px #38bdf8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      .appIcon {
+        width: 22px;
+        height: 22px;
+        flex: 0 0 auto;
+        filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.35));
+      }
+
+      #chat {
+        flex: 1;
+        overflow-y: auto;
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .card {
+        border: 1px solid rgba(56, 189, 248, 0.35);
+        background: rgba(30, 41, 59, 0.72);
+        border-radius: 16px;
+        padding: 14px;
+        box-shadow: 0 12px 30px rgba(2, 6, 23, 0.35);
+      }
+
+      .cardTitle {
+        font-weight: 800;
+        font-size: 16px;
+        margin: 0 0 6px;
+      }
+
+      .muted {
+        color: rgba(226, 232, 240, 0.82);
+        font-size: 13px;
+        line-height: 1.35;
+      }
+
+      .pillRow {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+      }
+
+      .pill {
+        border: 1px solid rgba(56, 189, 248, 0.4);
+        background: rgba(15, 23, 42, 0.85);
+        color: white;
+        padding: 10px 12px;
+        border-radius: 999px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .pill.primary {
+        border-color: rgba(34, 197, 94, 0.45);
+        background: rgba(34, 197, 94, 0.95);
+        color: #020617;
+      }
+
+      .tabs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .tab {
+        border: 1px solid rgba(56, 189, 248, 0.25);
+        background: rgba(2, 6, 23, 0.35);
+        color: rgba(226, 232, 240, 0.95);
+        padding: 10px 12px;
+        border-radius: 12px;
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      .tab.active {
+        border-color: rgba(56, 189, 248, 0.55);
+        background: rgba(56, 189, 248, 0.14);
+      }
+
+      .authForm {
+        margin-top: 10px;
+        display: grid;
+        gap: 10px;
+      }
+
+      .authForm input {
+        width: 100%;
+        padding: 12px;
+        border-radius: 12px;
+        border: 1px solid rgba(56, 189, 248, 0.35);
+        background: rgba(15, 23, 42, 0.9);
+        color: white;
+        outline: none;
+      }
+
+      .authForm input:focus {
+        border-color: rgba(34, 197, 94, 0.55);
+        box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.15);
+      }
+
+      .authError {
+        display: none;
+        border: 1px solid rgba(248, 113, 113, 0.35);
+        background: rgba(248, 113, 113, 0.12);
+        color: #fecaca;
+        border-radius: 12px;
+        padding: 10px 12px;
+        font-weight: 700;
+        font-size: 13px;
+      }
+
+      .authError.show {
+        display: block;
+      }
+
+      .disabled {
+        opacity: 0.6;
+        pointer-events: none;
+      }
+
+      .message {
+        padding: 12px;
+        border-radius: 12px;
+        max-width: 80%;
+        font-size: 15px;
+      }
+
+      .user {
+        align-self: flex-end;
+        background: #22c55e;
+        color: black;
+      }
+
+      .ai {
+        align-self: flex-start;
+        background: #1e293b;
+        border: 1px solid #38bdf8;
+      }
+
+      .image {
+        max-width: 200px;
+        border-radius: 10px;
+        margin-top: 5px;
+      }
+
+      #inputArea {
+        display: flex;
+        padding: 10px;
+        background: #020617;
+        border-top: 1px solid #38bdf8;
+        gap: 6px;
+      }
+
+      #input {
+        flex: 1;
+        padding: 14px;
+        font-size: 16px;
+        border: none;
+        border-radius: 10px;
+        background: #0f172a;
+        color: white;
+        outline: none;
+      }
+
+      #input:disabled {
+        opacity: 0.7;
+      }
+
+      button {
+        padding: 14px;
+        font-size: 16px;
+        border: none;
+        border-radius: 10px;
+        background: #38bdf8;
+        font-weight: bold;
+        cursor: pointer;
+      }
+
+      button:active {
+        transform: scale(0.95);
+      }
+
+      #fileInput {
+        display: none;
+      }
+    </style>
+  </head>
+
+  <body>
+    <header>
+      <img class="appIcon" src="./ai-homework-helper-icon.svg" alt="" />
+      <span>AI Homework Helper</span>
+    </header>
+
+    <div id="chat">
+      <div id="accessGate" class="card">
+        <div class="cardTitle">Request Permission</div>
+        <div class="muted">
+          Hi! To use AI Homework Helper, please request permission to access the assistant. Once approved, you’ll be able
+          to ask questions, upload photos of problems, and receive step-by-step help.
+        </div>
+
+        <div class="pillRow">
+          <button id="requestAccessBtn" class="pill primary" type="button">Request Access</button>
+          <button id="shareAccessBtn" class="pill" type="button">Share Request</button>
+          <button id="logoutBtn" class="pill" type="button" style="display: none">Logout</button>
+        </div>
+
+        <div class="tabs" aria-label="Authentication tabs">
+          <button id="tabLogin" class="tab active" type="button">Login</button>
+          <button id="tabCreate" class="tab" type="button">Create Account</button>
+        </div>
+
+        <form id="authForm" class="authForm">
+          <input id="authEmail" type="email" inputmode="email" autocomplete="email" placeholder="Email" required />
+          <input
+            id="authPassword"
+            type="password"
+            autocomplete="current-password"
+            placeholder="Password (8+ chars)"
+            minlength="8"
+            required
+          />
+          <div id="authError" class="authError" role="alert" aria-live="polite"></div>
+          <button id="authSubmitBtn" type="submit">Login</button>
+        </form>
+
+        <div id="approvalStatus" class="muted" style="margin-top: 10px; display: none"></div>
+      </div>
+    </div>
+
+    <div id="inputArea">
+      <button onclick="openCamera()">📷</button>
+      <input id="input" placeholder="Ask a homework question..." disabled />
+      <button onclick="send()">Ask</button>
+      <input
+        type="file"
+        id="fileInput"
+        accept="image/*"
+        capture="environment"
+        onchange="uploadImage(event)"
+      />
+    </div>
+
+    <script>
+      async function api(path, { method = "GET", body } = {}) {
+        const res = await fetch(path, {
+          method,
+          headers: body ? { "Content-Type": "application/json" } : undefined,
+          body: body ? JSON.stringify(body) : undefined,
+          credentials: "include",
+        });
+        const isJson = (res.headers.get("content-type") || "").includes("application/json");
+        const data = isJson ? await res.json().catch(() => null) : null;
+        if (!res.ok) throw new Error(data?.error || `Request failed (${res.status})`);
+        return data;
+      }
+
+      function addMessage(text, type) {
+        let msg = document.createElement("div");
+        msg.className = "message " + type;
+        msg.textContent = text;
+
+        document.getElementById("chat").appendChild(msg);
+        scrollChat();
+      }
+
+      function addImage(src) {
+        let container = document.createElement("div");
+        container.className = "message user";
+
+        let img = document.createElement("img");
+        img.src = src;
+        img.className = "image";
+
+        container.appendChild(img);
+
+        document.getElementById("chat").appendChild(container);
+
+        scrollChat();
+
+        setTimeout(() => {
+          addMessage("AI: I can see the image. Connect this to an AI vision API to analyze the homework.", "ai");
+        }, 1000);
+      }
+
+      function scrollChat() {
+        let chat = document.getElementById("chat");
+        chat.scrollTop = chat.scrollHeight;
+      }
+
+      let appState = {
+        me: null,
+        approved: false,
+        mode: "login", // login | create
+      };
+
+      function setAuthError(msg) {
+        const el = document.getElementById("authError");
+        if (!msg) {
+          el.textContent = "";
+          el.classList.remove("show");
+          return;
+        }
+        el.textContent = msg;
+        el.classList.add("show");
+      }
+
+      function setApprovalStatus(msg) {
+        const el = document.getElementById("approvalStatus");
+        if (!msg) {
+          el.textContent = "";
+          el.style.display = "none";
+          return;
+        }
+        el.textContent = msg;
+        el.style.display = "block";
+      }
+
+      function updateGateUI() {
+        const input = document.getElementById("input");
+        const gate = document.getElementById("accessGate");
+        const logoutBtn = document.getElementById("logoutBtn");
+        const authForm = document.getElementById("authForm");
+        const tabs = document.querySelector(".tabs");
+
+        if (appState.me && appState.approved) {
+          input.disabled = false;
+          gate.classList.add("disabled");
+          gate.style.display = "none";
+          return;
+        }
+
+        gate.style.display = "block";
+        gate.classList.remove("disabled");
+        input.disabled = true;
+
+        if (appState.me && !appState.approved) {
+          logoutBtn.style.display = "inline-block";
+          authForm.style.display = "none";
+          tabs.style.display = "none";
+          setApprovalStatus(
+            `Signed in as ${appState.me.email}. Your access request is pending approval. You can also tap “Request Access” to email a request.`,
+          );
+        } else {
+          logoutBtn.style.display = "none";
+          authForm.style.display = "grid";
+          tabs.style.display = "grid";
+          setApprovalStatus("");
+        }
+      }
+
+      async function refreshMe() {
+        try {
+          const me = await api("/api/me");
+          appState.me = me;
+          appState.approved = !!me.approved;
+        } catch {
+          appState.me = null;
+          appState.approved = false;
+        }
+        updateGateUI();
+      }
+
+      function buildRequestText(email) {
+        return (
+          "May I please have permission to use the AI Homework Helper application? " +
+          "I would like to ask questions and get assistance with my homework through this tool. " +
+          (email ? `My email is: ${email}. ` : "") +
+          "Thank you!"
+        );
+      }
+
+      async function requestAccessViaEmail() {
+        const email = (document.getElementById("authEmail").value || "").trim();
+        try {
+          await api("/api/access/request", { method: "POST", body: { email } });
+        } catch {
+          // If the server isn't running, still allow the email request.
+        }
+
+        const adminEmail = "admin@oklahomachristianschool.edu"; // change to real approver email
+        const subject = encodeURIComponent("AI Homework Helper Access Request");
+        const body = encodeURIComponent(buildRequestText(email));
+        window.location.href = `mailto:${encodeURIComponent(adminEmail)}?subject=${subject}&body=${body}`;
+      }
+
+      async function shareAccessRequest() {
+        const email = (document.getElementById("authEmail").value || "").trim();
+        const text = buildRequestText(email);
+        try {
+          await api("/api/access/request", { method: "POST", body: { email } });
+        } catch {
+          // ignore
+        }
+
+        if (navigator.share) {
+          try {
+            await navigator.share({ title: "Request Access", text });
+            return;
+          } catch {
+            // ignore
+          }
+        }
+
+        try {
+          await navigator.clipboard.writeText(text);
+          addMessage("AI: Access request copied to clipboard. Paste it into an email or message to request approval.", "ai");
+        } catch {
+          addMessage("AI: Please copy and send this request to an approver:\n\n" + text, "ai");
+        }
+      }
+
+      function setMode(mode) {
+        appState.mode = mode;
+        document.getElementById("tabLogin").classList.toggle("active", mode === "login");
+        document.getElementById("tabCreate").classList.toggle("active", mode === "create");
+        document.getElementById("authSubmitBtn").textContent = mode === "login" ? "Login" : "Create Account";
+        document.getElementById("authPassword").setAttribute(
+          "autocomplete",
+          mode === "login" ? "current-password" : "new-password",
+        );
+        setAuthError("");
+      }
+
+      document.getElementById("tabLogin").addEventListener("click", () => setMode("login"));
+      document.getElementById("tabCreate").addEventListener("click", () => setMode("create"));
+
+      document.getElementById("requestAccessBtn").addEventListener("click", requestAccessViaEmail);
+      document.getElementById("shareAccessBtn").addEventListener("click", shareAccessRequest);
+
+      document.getElementById("logoutBtn").addEventListener("click", async () => {
+        try {
+          await api("/api/auth/logout", { method: "POST" });
+        } catch {
+          // ignore
+        }
+        await refreshMe();
+      });
+
+      document.getElementById("authForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        setAuthError("");
+
+        const email = (document.getElementById("authEmail").value || "").trim();
+        const password = document.getElementById("authPassword").value || "";
+
+        try {
+          if (appState.mode === "login") {
+            await api("/api/auth/login", { method: "POST", body: { email, password } });
+          } else {
+            await api("/api/auth/signup", { method: "POST", body: { email, password } });
+          }
+          await refreshMe();
+          if (!appState.approved) {
+            addMessage(
+              "AI: Your account is created/logged in. Access is pending approval. Tap “Request Access” to send a request.",
+              "ai",
+            );
+          } else {
+            addMessage("AI: Access approved. Ask your question whenever you're ready.", "ai");
+          }
+        } catch (err) {
+          setAuthError(err?.message || "Something went wrong.");
+        }
+      });
+
+      async function send() {
+        let input = document.getElementById("input");
+
+        if (input.value.trim() == "") return;
+        if (!appState.approved) {
+          addMessage("AI: Please request access first (tap “Request Access”), then try again once approved.", "ai");
+          return;
+        }
+
+        let question = input.value;
+
+        addMessage("You: " + question, "user");
+
+        input.value = "";
+
+        addMessage("AI: Thinking...", "ai");
+
+        try {
+          const data = await api("/api/chat", { method: "POST", body: { message: question } });
+          let msgs = document.querySelectorAll(".ai");
+          msgs[msgs.length - 1].textContent = "AI: " + (data?.reply || "Try breaking the problem into smaller steps.");
+        } catch {
+          setTimeout(() => {
+            let msgs = document.querySelectorAll(".ai");
+            msgs[msgs.length - 1].textContent =
+              "AI: (Server not connected yet) Try breaking the problem into smaller steps.";
+          }, 600);
+        }
+      }
+
+      function openCamera() {
+        document.getElementById("fileInput").click();
+      }
+
+      function uploadImage(event) {
+        let file = event.target.files[0];
+
+        if (!file) return;
+
+        let reader = new FileReader();
+
+        reader.onload = function (e) {
+          addImage(e.target.result);
+        };
+
+        reader.readAsDataURL(file);
+      }
+
+      document.getElementById("input").addEventListener("keypress", function (e) {
+        if (e.key === "Enter") send();
+      });
+
+      refreshMe();
+    </script>
+  </body>
+</html>
